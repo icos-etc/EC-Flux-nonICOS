@@ -4,11 +4,11 @@
 # + non-ICOS to RFlux files +
 # 
 # Utility for processing of non-ICOS formatted files with the RFlux package.
-# Converts any raw data native format to that one usable as input to RFlux and
-# verifies the compliance of the respective metadata (named ECMD table).
-# The RFlux input files and the ECMD table are saved into a local directory.
+# Job: 1. converts any raw data native format to that one usable as input to RFlux
+#      2. verifies the compliance of the respective metadata (named ECMD table) and possibly adjust it
+# The RFlux input files and the formatted ECMD table are saved into a user defined directory
 # 
-# Note: original rawdata file names must contain the time reference as YYYYmmddHHMM
+# Note: original rawdata file names must contain the time reference as YYYYmmddHHMM (possibly interspaced by "-", "_" or "T )
 #
 # @author: Giacomo Nicolini
 # @contact: g.nicolini@unitus.it
@@ -31,12 +31,7 @@ options(scipen = 9999)
 
 ## SET DATA PARAMETERS (as prompts to users)
 
-cat(cyan('**********************************************************\n'))
-cat(cyan('NON-ICOS files processing with RFlux\n'))
-cat(cyan('Allow for processing of non-ICOS formatted EC files with RFlux\nConverts whichever native format and processes)\n'))
-cat(cyan('**********************************************************\n\n'))
-
-cat(cyan('Start the setting of parameters:\n\n'))
+cat(cyan('Set file conversion parameters:\n\n'))
 
 ## - Station ID
 site.ID <- readline(prompt = '- Station ID: ')
@@ -45,9 +40,9 @@ site.ID <- readline(prompt = '- Station ID: ')
 ### Create and set directories 
 
 # Path of RAW data files and ECMD table folder
-input.dir.or <- readline(prompt="- Original raw data and ECMD table directory path [no quotes]:\n ")
+input.dir.or <- readline(prompt="- Path of the directory in which the original raw data and ECMD table are stored [no quotes]:\n ")
 # # Path of RFlux complinat RAW data files and ECMD table folder
-# input.dir.R <- readline(prompt="- RFlux compliant raw data and ECMD table directory path [no quotes]:\n ")
+# input.dir.R <- readline(prompt = "- Path of the directory in which RFlux compliant raw data and ECMD table will be saved [no quotes]:\n ")
 
 ## Original raw data files list
 or.file.list <- grep(list.files(input.dir.or, full.names = FALSE), pattern='ecmd', inv=T, value=T) # excluding the ecmd file
@@ -55,7 +50,7 @@ or.file.list <- grep(list.files(input.dir.or, full.names = FALSE), pattern='ecmd
 
 ## - RAW DATA file format 
 raw.line.skip <- readline(prompt = '- Raw data file format (1/5): number of rows to skip (include the header): ')
-raw.sep  <- readline(prompt = '- Raw data file format (2/5): column separator [1 for " ", 2 for ", 3 for "\t", 4 for ";"]: ')
+raw.sep  <- readline(prompt = '- Raw data file format (2/5): column separator [1 for "space", 2 for "comma", 3 for "tab", 4 for "semicolon"]: ')
 raw.na.string  <- readline(prompt = '- Raw data file format (3/5): missing data string: ')
 raw.date.str.first  <- readline(prompt = '- Raw data file format (4/5): first index of the date in the file names (it must be in YYYYmmddHHMM): ')
 raw.date.str.last  <- readline(prompt = '- Raw data file format (5/5): last index of the date in the file names (it must be in YYYYmmddHHMM): ')
@@ -66,19 +61,33 @@ raw.date.str.last  <- readline(prompt = '- Raw data file format (5/5): last inde
 # Check for presence of station metadata, possibly check and save it into the input folder
 if(length(list.files(paste0(input.dir.or, '/'), pattern = '_ecmd')) == 0){
   cat(red('Error: a proper metadata table is required for processing.\nPlease create and save it in the original data input directory using this name:\n'))
-  cat(paste0(input.dir.or, '\\', site.ID, '_ecmd.csv'))
-  cat(yellow('See the RFlux help for variable meaning and requirements.\n\n'))
+  cat(paste0(input.dir.or, '/', site.ID, '_ecmd.csv'))
+  cat(yellow('\nSee the RFlux help for variable meaning and requirements.\n\n'))
 }else{
   cat(cyan('OK, a metadata table was found in the original data input directory.\nChecking its compliance...\n\n'))
   
   ## read it 
   ecmd <- fread(list.files(paste0(input.dir.or, '/'), pattern = '_ecmd', full.names = TRUE), header = T, sep=',', data.table = F)
   
-  ## check it
+  ## check and modiied it
   
   # . metadata time range
   if(ecmd$DATE_OF_VARIATION_EF[1] > as.numeric(gsub("[-_T+]", '', substr(or.file.list[1], raw.date.str.first, raw.date.str.last)))){
     cat(red('Error: raw data are earlier than metadata.\nCorrect the metadata time range and restart processing.\n\n'))
+    stop('')
+  }
+  
+  # . force number of header rows to 1 (as expected from RFlux)
+  ecmd$NROW_HEADER <- 1
+  
+  # . force columnn separator to comma (as expected from RFlux)
+  ecmd$SEPARATOR <- 'comma'
+  
+  
+  # . sonic north alignement 
+  sa.Na.na <- is.na(ecmd$SA_NORTH_ALIGNEMENT)
+  if(any(ecmd$SA_MANUFACTURER[sa.Na.na] == 'gill')){
+    cat(red('Error: the sonic north alignement (SA_NORTH_ALIGNEMENT) must be defined. Please specify it and restart processing.\n\n'))
     stop('')
   }
   
@@ -87,8 +96,8 @@ if(length(list.files(paste0(input.dir.or, '/'), pattern = '_ecmd')) == 0){
                       'GA_PATH','GA_MANUFACTURER','GA_MODEL','FILE_EXTENSION','UVW_UNITS','T_SONIC_UNITS','T_CELL_UNITS','P_CELL_UNITS',
                       'CO2_measure_type','CO2_UNITS','H2O_measure_type','H2O_UNITS','SA_DIAG','GA_DIAG')
   ecmd.sens.var <- as.list(ecmd[, sens.var.names])
-  lapply(lapply(ecmd.sens.var, function(x) unlist(gregexpr("[A-Z]", x))), function(x) x > 0)
-  if(any(unlist(gregexpr("[A-Z]", ecmd.sens.var)))){
+  ecmd.sens.var.UP <- lapply(lapply(ecmd.sens.var, function(x) unlist(gregexpr("[A-Z]", x))), function(x) x > 0)
+  if(any(unlist(ecmd.sens.var.UP))){
     # lowercase names
     ecmd[, sens.var.names] <- apply(ecmd[, sens.var.names], 2, tolower)
     cat(yellow('WARNING: some metadata variable names contain capital letters.\n'))
@@ -97,12 +106,6 @@ if(length(list.files(paste0(input.dir.or, '/'), pattern = '_ecmd')) == 0){
   
   # . metadata variable names: names complinace !TODO
   
-  # . sonic north alignement 
-  if(any(is.na(ecmd$SA_NORTH_ALIGNEMENT))){
-    cat(red('Error: the sonic north alignement (SA_NORTH_ALIGNEMENT) must be defined. Please specify it and restart processing.\n\n'))
-    stop('')
-  }
-
   # . wind sector exclusion
   if(any(is.na(ecmd$SA_INVALID_WIND_SECTOR_c1))){
     # add fake values
@@ -113,6 +116,28 @@ if(length(list.files(paste0(input.dir.or, '/'), pattern = '_ecmd')) == 0){
     cat(silver('If however there actually is a wind sector to exclude, please add it to the table and restart processing.\n\n'))
   }
   
+  
+  # . force non-LI7200 closed path GA to LI-7200 (as expected from RFlux)
+  # temporary patch to handle GA_DIAG in any case (will be ignored)
+  if(any(ecmd$GA_PATH == 'closed')){
+    if(any(ecmd$GA_MANUFACTURER != 'licor')){ecmd$GA_MANUFACTURER[ecmd$GA_MANUFACTURER != 'licor'] <- 'licor'}
+    if(any(ecmd$GA_MODEL != 'li7200_1')){
+      ecmd$GA_MODEL[ecmd$GA_MODEL != 'li7200_1'] <- 'li7200_1'
+      cat(silver('NOTE: the actual GA has been renamed as "LI-7200" for a proper diagnostic handling. This is just a fake name and will not affect the data processing.\n'))
+    }
+  }
+  # . force non-LI7500 open path GA to LI-7500 (as expected from RFlux)
+  # temporary patch to handle GA_DIAG in any case (will be ignored)
+  if(any(ecmd$GA_PATH == 'open')){
+    if(any(ecmd$GA_MANUFACTURER != 'licor')){ecmd$GA_MANUFACTURER[ecmd$GA_MANUFACTURER != 'licor'] <- 'licor'}
+    if(any(ecmd$GA_MODEL != 'li7500_1')){
+      ecmd$GA_MODEL[ecmd$GA_MODEL != 'li7500_1'] <- 'li7500_1'
+      cat(silver('NOTE: the actual GA has been renamed as "LI-7500" for a proper diagnostic handling. This is just a fake name and will not affect the data processing.\n'))}
+  }
+  
+  # . convert NAs to characters to let them in the new table
+  ecmd[is.na(ecmd)] <- 'NA'
+  
   # save it to the RFlux input directory
   fwrite(ecmd, paste0(input.dir.R, '/', site.ID, '_ecmd.csv'), quote = F, sep = ',')
   
@@ -120,6 +145,8 @@ if(length(list.files(paste0(input.dir.or, '/'), pattern = '_ecmd')) == 0){
 
 # stop in case there is not an ecmd  
 if((length(list.files(paste0(input.dir.or, '/'), pattern = '_ecmd')) == 0)) stop('See the warnings above!')
+
+cat(cyan('Done!\n '))
 
 
 ## - CHECK & SET raw data
