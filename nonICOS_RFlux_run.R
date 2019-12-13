@@ -4,7 +4,12 @@
 # + Support code to Rflux library +
 # 
 # Utility for processing of non-ICOS files with the RFlux library
+# Job: processes RFlux compliant files (converted by non_ICOS_to_RFlux.R) with RFlux package functions 
+# The outpus are saved into a user defined directory
 #
+# @author: Giacomo Nicolini
+# @contact: g.nicolini@unitus.it
+# @date: 2019-12-11
 #
 #''***************************************************************************
 
@@ -29,23 +34,28 @@ remove(kpacks, new.packs)
 options(scipen = 9999)
 
 
-# **********************************************************
+cat('\n\n')
+cat(cyan('**********************************************************\n'))
+cat(cyan('NON-ICOS files processing with RFlux\n'))
+cat(cyan('Allow for processing of non-ICOS formatted EC files with RFlux\nConverts whichever native format and processes)\n'))
+cat(cyan('**********************************************************'))
+cat('\n\n')
 
 ### Create and set directories 
 
 cat(cyan('Set directories:\n\n '))
 # Path of RFlux complinat RAW data files and ECMD table folder
-input.dir.R <- readline(prompt = "- RFlux compliant raw data and ECMD table directory path [no quotes]:\n ")
+input.dir.R <- readline(prompt = "- Path of the directory in which RFlux compliant raw data and ECMD table will be saved [no quotes]:\n ")
 # Path of RFlux output files
-output.dir.R <- readline(prompt = "- RFlux output directory path [no quotes]:\n ")
+output.dir.R <- readline(prompt = "- Path of the directory in which RFlux outputs will be saved [no quotes]:\n ")
 # Path of EP output files
-output.dir.EP <- readline(prompt = "- EP output directory path [no quotes]:\n ")
+output.dir.EP <- readline(prompt = "- Path of the directory in which EddyPro outputs will be saved [no quotes]:\n ")
 # Path to EddyPro 'bin' folder
-EP.bin.path <- readline(prompt = '- Path to EddyPro "bin" folder [no quotes]:\n ')
+EP.bin.path <- readline(prompt = '- Path to the EddyPro "bin" folder [no quotes]:\n ')
 
 
 ## Run the utility to convert non-ICOS files to RFlux compliant files
-source(nonICOS_to_RFlux.R)
+source(paste0(getwd(), '/nonICOS_to_RFlux.R'))
 
 
 ### SET THE PROCESSING OPTIONS (as prompts to users)
