@@ -114,7 +114,7 @@ if(exists('WorkSet')){
 
 
 
-### Step 8: Cleaning eddy covariane flux measurements [RFLux] -------------------------
+### Cleaning eddy covariane flux measurements [RFLux] -------------------------
 # Data cleaning procedure described by Vitale et al (2019).
 cat(cyan('Cleaning eddy covariance fluxes...\n'))
 cleanset <- cleanFlux(path_workset = paste0(output.dir.R, '/', list.files(output.dir.R, pattern = '_WorkSet')),
