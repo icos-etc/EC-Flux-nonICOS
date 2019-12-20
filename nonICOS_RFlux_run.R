@@ -9,7 +9,7 @@
 #
 # @author: Giacomo Nicolini
 # @contact: g.nicolini@unitus.it
-# @date: 2019-12-11
+# @date: 2019-12-20
 #
 #''***************************************************************************
 
@@ -17,7 +17,7 @@
 # **********************************************************
 ## Libraries & Functions 
 
-## In case of a new RFlux release
+## In case of a new RFlux release or devtools installation
 # install.packages("devtools")
 # devtools::install_github("domvit81/RFlux", force = TRUE)
 # help(package=RFlux)
@@ -42,18 +42,6 @@ cat(cyan('Allow for processing of non-ICOS formatted EC files with RFlux\nConver
 cat(cyan('**********************************************************'))
 cat('\n\n')
 
-### Create and set directories 
-
-# cat(cyan('Set directories:\n\n '))
-# # Path of RFlux complinat RAW data files and ECMD table folder
-# input.dir.R <- readline(prompt = "- Path of the directory in which RFlux compliant raw data and ECMD table will be saved [no quotes]:\n ")
-# # Path of RFlux output files
-# output.dir.R <- readline(prompt = "- Path of the directory in which RFlux outputs will be saved [no quotes]:\n ")
-# # Path of EP output files
-# output.dir.EP <- readline(prompt = "- Path of the directory in which EddyPro outputs will be saved [no quotes]:\n ")
-# # Path to EddyPro 'bin' folder
-# EP.bin.path <- readline(prompt = '- Path to the EddyPro "bin" folder [no quotes]:\n ')
-
 
 ## Run the utility to convert non-ICOS files to RFlux compliant files
 source(paste0(getwd(), '/nonICOS_config.R'))
@@ -61,33 +49,6 @@ source(paste0(getwd(), '/nonICOS_config.R'))
 
 ## Run the utility to convert non-ICOS files to RFlux compliant files
 source(paste0(getwd(), '/nonICOS_to_RFlux.R'))
-
-
-# ### SET THE PROCESSING OPTIONS (as prompts to users)
-# 
-# cat(cyan('Set processing parameters:\n\n '))
-# 
-# # . Parameters of the planar fit method and the spectral correction factors 
-# # taken from previous processing results (online=TRUE) or estimated by using the current set of EC rawdata (online=FALSE)
-# online.RF <- readline(prompt = '- Processing options (1/7): planar fit method and spectral correction assessment files \n(from previous processing results (TRUE) or estimated using the current EC raw dataset (FALSE)): ')
-# 
-# # . Spectral assessment file location
-# path.sa.file.RF <- readline(prompt = '- Processing options (2/7): spectral assessment file location \n(set to "NULL" if not present): ')
-# 
-# # . Planar fit file location
-# path.pf.file.RF <- readline(prompt = '- Processing options (3/7): planar fit file location \n(set to "NULL" if not present): ')
-# 
-# # . Time-lag detection method (in EP)
-# time.lag.method <- readline(prompt = '- Processing options (4/7): method for time lag detection in EP \n(0 None; 1 Constant time lag, 2 Maximum covariance with default; 3 Maximum covariance; 4 Automatic optimization): ')
-# 
-# # . Raw data despiking method (in EP)
-# despikig.method <- readline(prompt = '- Processing options (5/7): method for raw data despiking in EP \n("None", not apply; "VM97", algorithm by Vickers and Mahrt (1997); "M13", algorithm by Mauder et al (2013)): ')
-# 
-# # . Raw data trend removal method (in EP)
-# detrending.method <- readline(prompt = '- Processing options (6/7): method for trend removal in EP \n("BA" Block Average; "LD" Linear Detrending (Rannik and Vesala, 2001)): ')
-# 
-# # . Anemometer axis rotation method (in EP)
-# tilt.method <- readline(prompt = '- Processing options (7/7): method for anemometer axis rotation in EP \n("DR" Double Rotation; "PF" Planar Fit (Wilczak et al, 2001)): ')
 
 
 
@@ -168,7 +129,4 @@ if(exists('cleanset')){
   cat(red('Oops: an error occurred while cleaning data!\n'))
 }
 
-
-# # Save Rdata
-# save.image(paste0(output.dir, '_', site.ID, '_', format(Sys.Date(), '%Y%m%d'), '.Rdata'))
 
