@@ -12,7 +12,7 @@
 #
 # @author: Giacomo Nicolini
 # @contact: g.nicolini@unitus.it
-# @date: 2019-12-11
+# @date: 2019-12-20
 
 #''***************************************************************************
 
@@ -29,31 +29,9 @@ remove(kpacks, new.packs)
 options(scipen = 9999)
 
 
-## SET DATA PARAMETERS (as prompts to users)
-
-cat(cyan('Set file conversion parameters:\n\n'))
-
-## - Station ID
-site.ID <- readline(prompt = '- Station ID: ')
-
-
-### Create and set directories 
-
-# Path of RAW data files and ECMD table folder
-input.dir.or <- readline(prompt="- Path of the directory in which the original raw data and ECMD table are stored [no quotes]:\n ")
-# # Path of RFlux complinat RAW data files and ECMD table folder
-# input.dir.R <- readline(prompt = "- Path of the directory in which RFlux compliant raw data and ECMD table will be saved [no quotes]:\n ")
 
 ## Original raw data files list
 or.file.list <- grep(list.files(input.dir.or, full.names = FALSE), pattern='ecmd', inv=T, value=T) # excluding the ecmd file
-
-
-## - RAW DATA file format 
-raw.line.skip <- readline(prompt = '- Raw data file format (1/5): number of rows to skip (include the header): ')
-raw.sep  <- readline(prompt = '- Raw data file format (2/5): column separator [1 for "space", 2 for "comma", 3 for "tab", 4 for "semicolon"]: ')
-raw.na.string  <- readline(prompt = '- Raw data file format (3/5): missing data string: ')
-raw.date.str.first  <- readline(prompt = '- Raw data file format (4/5): first index of the date in the file names (it must be in YYYYmmddHHMM): ')
-raw.date.str.last  <- readline(prompt = '- Raw data file format (5/5): last index of the date in the file names (it must be in YYYYmmddHHMM): ')
 
 
 ## - CHECK & SET ECMD table
@@ -163,12 +141,6 @@ if(length(or.file.list) == 0){
 } else {
   cat(cyan('OK,' %+% as.character(length(or.file.list)) %+% ' files were fetched in the provided directory!\n'))
   cat(silver('If you need to see which are the required variable meaning and format please see the RFlux help.\n\n'))
-  cat(cyan('OK, please provide the possible column indexes of the following variables and press <RETURN>:\n' %+%
-             '(if a variable is not present in the original files, use NA as index) \n\n' %+%
-             paste(names.compl.raw, collapse = ',') %+% '\n\n'))
-  index.prompt <- '- Variable position index (comma seperated)): \n'
-  var.index <- suppressWarnings(as.integer(strsplit(readline(index.prompt), ",")[[1]]))
-  
   if(length(var.index) == length(names.compl.raw)){
     cat(cyan('OK, column indexes correctly reported.\n'))
   } else {
@@ -190,7 +162,7 @@ i <- 1
 for(i in 1:length(or.file.list)){
   
   # Read and extract only useful columns
-  cur.raw <- fread(paste0(input.dir.or, '/', or.file.list[i]), header = FALSE, skip = as.numeric(raw.line.skip), sep = raw.sep, na.strings = raw.na.string, data.table = FALSE)
+  cur.raw <- fread(paste0(input.dir.or, '/', or.file.list[i]), header = FALSE, skip = as.numeric(raw.line.skip), sep = raw.sep, na.strings = as.character(raw.na.string), data.table = FALSE)
   cur.raw <- cur.raw[, na.omit(var.index)]
   names(cur.raw) <- names.compl.raw[!is.na(var.index)]
   # Possibly add the missing columns
@@ -204,7 +176,7 @@ for(i in 1:length(or.file.list)){
   # save the formatted raw files
   fwrite(cur.raw, paste0(input.dir.R, '/', site.ID, '_xx_', gsub("[-_T+]", '', substr(or.file.list[i], raw.date.str.first, raw.date.str.last)), '_xxx.csv'), sep=',')
 }
-cat(cyan('All done!\n '))
+cat(cyan('All done! Files coverted.\n '))
 
 
 
