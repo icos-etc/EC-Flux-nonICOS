@@ -154,10 +154,14 @@ if(length(or.file.list) == 0){
 
 # Format the raw data according to the RFlux requirements
 cat(cyan('Formatting the EC raw data...\n '))
+
 if(raw.sep == 1){raw.sep <- ' '}
 if(raw.sep == 2){raw.sep <- ','}
 if(raw.sep == 3){raw.sep <- '\t'}
 if(raw.sep == 4){raw.sep <- ';'}
+
+var.index <- suppressWarnings(as.numeric(var.index)) 
+
 i <- 1
 for(i in 1:length(or.file.list)){
   
