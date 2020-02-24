@@ -117,7 +117,7 @@ if(length(list.files(paste0(input.dir.or, '/'), pattern = '_ecmd')) == 0){
   ecmd[is.na(ecmd)] <- 'NA'
   
   # save it to the RFlux input directory
-  fwrite(ecmd, paste0(input.dir.R, '/', site.ID, '_ecmd.csv'), quote = F, sep = ',')
+  fwrite(ecmd, paste0(input.dir.RF, '/', site.ID, '_ecmd.csv'), quote = F, sep = ',')
   
 }
 
@@ -164,8 +164,8 @@ var.index <- suppressWarnings(as.numeric(var.index))
 
 i <- 1
 for(i in 1:length(or.file.list)){
-  
-  # Read and extract only useful columns
+
+    # Read and extract only useful columns
   cur.raw <- fread(paste0(input.dir.or, '/', or.file.list[i]), header = FALSE, skip = as.numeric(raw.line.skip), sep = raw.sep, na.strings = as.character(raw.na.string), data.table = FALSE)
   cur.raw <- cur.raw[, na.omit(var.index)]
   names(cur.raw) <- names.compl.raw[!is.na(var.index)]
@@ -177,8 +177,21 @@ for(i in 1:length(or.file.list)){
   }
   # Arrange columns
   cur.raw <- cur.raw[, names.compl.raw]
-  # save the formatted raw files
-  fwrite(cur.raw, paste0(input.dir.R, '/', site.ID, '_xx_', gsub("[-_T+]", '', substr(or.file.list[i], raw.date.str.first, raw.date.str.last)), '_xxx.csv'), sep=',')
+  
+  # Possibly add NAs to get the correct rows number according to the acquisition frequency
+  nrow.exp <- 60 * 30 * ecmd$'ACQUISITION_FREQUENCY'
+  if(nrow(cur.raw) < nrow.exp){
+    row.miss <- as.data.frame(matrix(NA, nrow = nrow.exp-nrow(cur.raw), ncol = ncol(cur.raw)))
+    names(row.miss) <- names(cur.raw)
+    cur.raw <- rbind(cur.raw, row.miss, make.row.names = FALSE)
+  }
+  
+  # Convert missing values to -9999
+  cur.raw[is.na(cur.raw)] <- '-9999'
+  
+  # Save the formatted raw files
+  fwrite(cur.raw, paste0(input.dir.RF, '/', site.ID, '_xx_', gsub("[-_T+]", '', substr(or.file.list[i], raw.date.str.first, raw.date.str.last)), '_xxx.csv'), sep=',')
+  
 }
 cat(cyan('All done! Files coverted.\n '))
 
