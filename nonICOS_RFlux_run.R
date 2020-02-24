@@ -9,7 +9,7 @@
 #
 # @author: Giacomo Nicolini
 # @contact: g.nicolini@unitus.it
-# @date: 2019-12-20
+# @date: 2020-02-24
 #
 #''***************************************************************************
 
@@ -19,13 +19,13 @@
 
 ## In case of a new RFlux release or devtools installation
 # install.packages("devtools")
-# devtools::install_github("domvit81/RFlux", force = TRUE)
+# devtools::install_github("icos-etc/RFlux", force = TRUE)
 # help(package=RFlux)
 
 kpacks <- c('RFlux', 'data.table', 'crayon')
 new.packs <- kpacks[!(kpacks %in% installed.packages()[,"Package"])]
 if(length(new.packs)){
-  devtools::install_github("domvit81/RFlux", force = TRUE)
+  devtools::install_github("icos-etc/RFlux", force = TRUE)
   install.packages(new.packs[-which(new.packs == 'RFlux')])
 }
 lapply(kpacks, require, character.only=T)
@@ -59,8 +59,8 @@ cat(cyan('Start processing...\n\n '))
 # Metadata file management: Returns the input files required by LI-COR EddyPro software.
 
 cat(cyan('ECMD metadata table processing...\n '))
-get_md(path_ecmd = paste0(input.dir.R, '/', site.ID, '_ecmd.csv'),
-       path_rawdata = input.dir.R,
+get_md(path_ecmd = paste0(input.dir.RF, '/', site.ID, '_ecmd.csv'),
+       path_rawdata = input.dir.RF,
        path_output = output.dir.EP,
        online = online.RF, 
        path_sa_file = path.sa.file.RF,
@@ -76,7 +76,7 @@ cat(cyan('Done.\n'))
 ### Test statistics of the quality control routines on RAW data -------------------------
 # Returns the test statistics of the quality control routines described by Vitale et al (2019).
 
-ec.raw.list <- list.files(input.dir.R, pattern = 'xx', full.names = TRUE)
+ec.raw.list <- list.files(input.dir.RF, pattern = 'xx', full.names = TRUE)
 cat(cyan('Computing statistics for the data quality control...\n '))
 qcStats.res <- as.data.frame(
   do.call(rbind,
@@ -84,7 +84,7 @@ qcStats.res <- as.data.frame(
   )
 )
 cat(cyan('Done.\n'))
-write.csv(qcStats.res, paste0(output.dir.R, '/', site.ID, '_qcStat.csv'), quote = F, row.names = F)
+write.csv(qcStats.res, paste0(output.dir.RF, '/', site.ID, '_qcStat.csv'), quote = F, row.names = F)
 
 
 ### Process the data with EddyPro [RFLux] -------------------------
@@ -104,8 +104,8 @@ cat(cyan('Merging time series...\n'))
 WorkSet <- ecworkset(path_EPout = paste0(output.dir.EP, '/', list.files(output.dir.EP, pattern = 'full_output')),
                      path_EPqc = paste0(output.dir.EP, '/', list.files(output.dir.EP, pattern = 'qc_details')),
                      path_EPmd = paste0(output.dir.EP, '/', list.files(output.dir.EP, pattern = '_metadata_')),
-                     path_QCstat = paste0(output.dir.R, '/', list.files(output.dir.R, pattern = 'qcStat')),
-                     path_output = output.dir.R,
+                     path_QCstat = paste0(output.dir.RF, '/', list.files(output.dir.RF, pattern = 'qcStat')),
+                     path_output = output.dir.RF,
                      FileName = paste0(site.ID, '_WorkSet'))
 if(exists('WorkSet')){
   cat(cyan('Done.\nTime series have been merged!\n'))
@@ -118,9 +118,9 @@ if(exists('WorkSet')){
 ### Cleaning eddy covariane flux measurements [RFLux] -------------------------
 # Data cleaning procedure described by Vitale et al (2019).
 cat(cyan('Cleaning eddy covariance fluxes...\n'))
-cleanset <- cleanFlux(path_workset = paste0(output.dir.R, '/', list.files(output.dir.R, pattern = '_WorkSet')),
-                      path_ecmd = paste0(input.dir.R, '/', list.files(input.dir.R, pattern = '_ecmd')),
-                      path_output = output.dir.R,
+cleanset <- cleanFlux(path_workset = paste0(output.dir.RF, '/', list.files(output.dir.RF, pattern = '_WorkSet')),
+                      path_ecmd = paste0(input.dir.RF, '/', list.files(input.dir.RF, pattern = '_ecmd')),
+                      path_output = output.dir.RF,
                       FileName = paste0(site.ID, '_cleanset'),
                       plotQC = TRUE)
 if(exists('cleanset')){
