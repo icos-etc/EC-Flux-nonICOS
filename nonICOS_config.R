@@ -16,14 +16,14 @@ site.ID <- "..."
 # Path of RAW data files and ECMD table folder
 input.dir.or <- "..."
 
-# Path of RFlux compliant RAW data files and ECMD table folder
-input.dir.R <- "..."
-
-# Path of RFlux output files
-output.dir.R <- "..."
+# Path of the folder where compliant RFlux RAW data files and ECMD table will be stored
+input.dir.RF <- "..."
 
 # Path of EP output files
 output.dir.EP <- "..."
+
+# Path of RFlux output files
+output.dir.RF <- "..."
 
 # Path to EddyPro bin folder
 EP.bin.path <- ".../bin"
@@ -51,7 +51,7 @@ raw.date.str.last  <- NULL
 ## Column indexes of the following variable:
 # IF CLOSED PATH GA: U,V,W,T_SONIC,CO2,H2O,SA_DIAG,GA_DIAG,T_CELL,T_CELL_IN,T_CELL_OUT,PRESS_CELL
 # IF OPEN PATH GA: U,V,W,T_SONIC,CO2,H2O,SA_DIAG,GA_DIAG
-# note: if a variable is not present in the original files, use NA as index
+# note: if a variable is not present in the original files, use NA as index. Numbers can be provided inboth numeric or character string.
 var.index <- NULL
 
 
